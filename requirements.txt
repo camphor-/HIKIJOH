@@ -6,3 +6,4 @@ pandas
 requests
 smbus2
 nfcpy
+prometheus-client
