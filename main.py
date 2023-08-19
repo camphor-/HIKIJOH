@@ -5,14 +5,21 @@ import nfc
 import pigpio
 from time import sleep
 import time
+
 import datetime
 import pandas as pd
-import datetime
 
 import lib.lcd as lcd
 from lib.lcd import lcd_byte, lcd_string, lcd_init
 from hook import open_door_hook, close_door_hook
 from prometheus_exporter import start_prometheus_exporter
+
+
+from post_alert_to_slack import check_open
+
+
+SCHEDULE_LINK = "https://cal.camph.net/public/schedule.json"
+
 
 class Servo:
     #set servo PIN
@@ -91,13 +98,14 @@ class NFC_Data:
         self.df.to_csv('/home/pi/HIKIJOH/data/idm.csv')
 
 
-
 def main():
     global LCD_BACKLIGHT
 
     door_isopen = True
     want_close = False
     card_istouch = False
+
+    check_open(door_isopen=door_isopen)
 
     card = NFC_CARD()
     servo = Servo()
@@ -165,7 +173,7 @@ def main():
                                 else:
                                     lcd_string(" THIS CARD IS  ", lcd.LCD_LINE_1)
                                     lcd_string(" NOT MASTER CARD ", lcd.LCD_LINE_2)
-  
+
                     if time.time() - card_touched_time > 5:
                         is_timeout = True
                     
@@ -193,8 +201,10 @@ def main():
                 #LCDの焼け付きを防止するために消す
                 want_close = False
                 LCD_BACKLIGHT = 0x00  #バックライトオフ
-                lcd_byte(0x01, lcd.LCD_CMD) #表示内容クリア    
+                lcd_byte(0x01, lcd.LCD_CMD) #表示内容クリア
 
+        # 開館の20分前から3時間後までの間にドアが開いていない場合はSlackに通知
+        check_open(door_isopen=door_isopen)
 
 
 if __name__ == '__main__':
