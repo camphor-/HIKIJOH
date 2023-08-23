@@ -9,18 +9,20 @@ from hue import turn_on_all_lights, turn_off_all_lights
 from prometheus_exporter import set_door_metrics_open, set_door_metrics_closed
 
 from remo_api import aircon_on, aircon_off
-
+from curtain import open_curtain, close_curtain
 
 def close_door_hook():
     set_door_metrics_closed()
     turn_off_all_lights()
     aircon_off()
+    close_curtain()
 
 
 def open_door_hook():
     set_door_metrics_open()
     turn_on_all_lights()
     aircon_on()
+    open_curtain()
 
 
 def show_datetime():  # 「日時」を表示
